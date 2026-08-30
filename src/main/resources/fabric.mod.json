@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "dvizhukha",
+  "version": "${version}",
+  "name": "Dvizhukha",
+  "description": "The mod provides SMO in Minecraft.",
+  "authors": [],
+  "contact": {},
+  "license": "unlicense",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "ru.florestdev.dvizhukha.client.DvizhukhaDataGenerator"
+    ],
+    "client": [
+      "ru.florestdev.dvizhukha.client.DvizhukhaClient"
+    ],
+    "main": [
+      "ru.florestdev.dvizhukha.Dvizhukha"
+    ]
+  },
+  "mixins": [
+    "dvizhukha.mixins.json",
+    {
+      "config": "dvizhukha.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
