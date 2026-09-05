@@ -16,6 +16,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
+import ru.florestdev.dvizhukha.KhokholKnight;
 
 public class Khokhol extends PigEntity {
     private float scale = 1.5f;
@@ -142,6 +143,8 @@ public class Khokhol extends PigEntity {
                         ),
                         false
                 );
+                player.sendMessage(Text.literal("§cДержи свой клинок на 15 ударов, но с мощностью в -9 сердец за один удар!"));
+                KhokholKnight.giveToPlayerStatic(player, player.getName().getString());
             }
         }
 

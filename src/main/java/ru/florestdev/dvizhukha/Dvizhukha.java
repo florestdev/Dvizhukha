@@ -4,10 +4,11 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
-import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LightningEntity;
 import net.minecraft.entity.SpawnGroup;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
@@ -29,12 +30,30 @@ public class Dvizhukha implements ModInitializer {
     public static final String MOD_ID = "dvizhukha";
     private final Random random = Random.create();
 
+    // Регистрация сущности
     public static final EntityType<Khokhol> KHOKHOL = Registry.register(
             Registries.ENTITY_TYPE,
             Identifier.of(MOD_ID, "khokhol"),
             EntityType.Builder.<Khokhol>create(Khokhol::new, SpawnGroup.CREATURE)
                     .dimensions(1.5f, 1.5f)
                     .build(RegistryKey.of(RegistryKeys.ENTITY_TYPE, Identifier.of(MOD_ID, "khokhol")))
+    );
+
+    // Ключ предмета — нужен ДО создания Item в Minecraft 1.21.11
+    public static final RegistryKey<Item> KHOKHOL_KNIGHT_KEY =
+            RegistryKey.of(
+                    RegistryKeys.ITEM,
+                    Identifier.of(MOD_ID, "khokhol_knight")
+            );
+
+    // Регистрируем предмет сразу с его RegistryKey
+    public static final KhokholKnight KHOKHOL_KNIGHT = Registry.register(
+            Registries.ITEM,
+            KHOKHOL_KNIGHT_KEY,
+            new KhokholKnight(
+                    new Item.Settings()
+                            .registryKey(KHOKHOL_KNIGHT_KEY)
+            )
     );
 
     private int tickCounter = 0;
@@ -44,60 +63,55 @@ public class Dvizhukha implements ModInitializer {
     public void onInitialize() {
         System.out.println("Dvizhukha mod initialized!");
 
+        // 1. Регистрируем атрибуты сущности
         FabricDefaultAttributeRegistry.register(KHOKHOL, Khokhol.createKhokholAttributes());
 
+        // 2. Предмет уже зарегистрирован выше вместе с RegistryKey.
+
+        // 3. Регистрируем обработчик тиков
         ServerTickEvents.END_SERVER_TICK.register(this::onServerTick);
 
+        // 4. Регистрируем команду
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(
                     CommandManager.literal("khokhol")
                             .executes(context -> {
-
                                 ServerCommandSource source = context.getSource();
 
                                 // Консоль
                                 if (source.getEntity() == null) {
                                     pigCycle(source.getServer());
-
                                     source.sendMessage(
                                             Text.literal("§aЦикл появления хохлов успешно запущен.")
                                     );
-
                                     return 1;
                                 }
 
                                 if (source.getEntity() instanceof ServerPlayerEntity player) {
-
                                     MinecraftServer server = source.getServer();
 
                                     // Singleplayer — разрешаем всем
                                     if (!server.isDedicated()) {
                                         pigCycle(server);
-
                                         source.sendMessage(
                                                 Text.literal("§aЦикл появления хохлов успешно запущен.")
                                         );
-
                                         return 1;
                                     }
 
                                     // Dedicated — проверяем OP
                                     if (!server.getPlayerManager()
                                             .isOperator(player.getPlayerConfigEntry())) {
-
                                         source.sendError(
                                                 Text.literal("§cУ тебя нет прав на эту команду.")
                                         );
-
                                         return 0;
                                     }
 
                                     pigCycle(server);
-
                                     source.sendMessage(
                                             Text.literal("§aЦикл появления хохлов успешно запущен.")
                                     );
-
                                     return 1;
                                 }
 
@@ -105,6 +119,14 @@ public class Dvizhukha implements ModInitializer {
                             })
             );
         });
+
+        // 5. Регистрируем рецепты (если нужны)
+        registerRecipes();
+    }
+
+    private void registerRecipes() {
+        // Здесь можно добавить рецепты для предмета
+        // Например, рецепт крафта KhokholKnight
     }
 
     private void onServerTick(MinecraftServer server) {
@@ -127,12 +149,14 @@ public class Dvizhukha implements ModInitializer {
         World world = player.getEntityWorld();
         BlockPos playerPos = player.getBlockPos();
 
+        // Создаём молнию
         LightningEntity lightning = new LightningEntity(EntityType.LIGHTNING_BOLT, world);
         lightning.setPosition(playerPos.getX() + 0.5, playerPos.getY(), playerPos.getZ() + 0.5);
         world.spawnEntity(lightning);
 
         player.sendMessage(Text.literal("§c⚡ Молния ударила рядом с вами!"), false);
 
+        // Спавним хохла через 1 секунду
         new Thread(() -> {
             try {
                 Thread.sleep(1000);
@@ -160,7 +184,15 @@ public class Dvizhukha implements ModInitializer {
 
                 player.sendMessage(Text.literal("§cИз молнии появился ВСУшник-хохол! ЗАМОЧИ ЕГО"), false);
                 System.out.println("§a[PigCycle] Хохол заспавнен!");
+
+                // Даём игроку нож при появлении хохла (опционально)
+                // KHOKHOL_KNIGHT.giveToPlayer(player, player.getName().getString());
             });
         }).start();
+    }
+
+    // Метод для получения экземпляра предмета
+    public static KhokholKnight getKhokholKnight() {
+        return KHOKHOL_KNIGHT;
     }
 }

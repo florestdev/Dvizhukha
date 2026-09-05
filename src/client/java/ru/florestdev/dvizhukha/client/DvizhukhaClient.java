@@ -2,8 +2,10 @@ package ru.florestdev.dvizhukha.client;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.PigEntityRenderer;
 import ru.florestdev.dvizhukha.Dvizhukha;
+import ru.florestdev.dvizhukha.KhokholKnight;
 
 public class DvizhukhaClient implements ClientModInitializer {
 
@@ -15,5 +17,6 @@ public class DvizhukhaClient implements ClientModInitializer {
                 Dvizhukha.KHOKHOL,
                 PigEntityRenderer::new
         );
+
     }
 }
